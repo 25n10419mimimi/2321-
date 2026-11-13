@@ -1,0 +1,217 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}
+:root{color-scheme:dark;--bg:#080c14;--panel:#111a29;--line:#29384c;--muted:#8fa1b8;--red:#ff5268;--cyan:#53d9ef;--gold:#ffd166;--green:#7cf0b0}
+body{margin:0;min-height:100vh;padding:24px 16px;background:radial-gradient(ellipse at 50% -15%,#243b59 0,#101a2a 42%,#070b12 100%);color:#f3f7fc;font-family:Inter,system-ui,"Noto Sans KR",sans-serif;display:flex;justify-content:center}
+main{width:min(1080px,100%)}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+h1{font-size:clamp(25px,4vw,36px);margin:0;letter-spacing:.16em;font-weight:950}
+h1 b{color:var(--red);text-shadow:0 0 22px #ff526855}
+.subtitle{margin-top:4px;color:var(--muted);font-size:11px;letter-spacing:.2em}
+.actions{display:flex;gap:8px}
+.btn{border:1px solid #42536a;border-radius:9px;padding:10px 14px;background:#1b2a3d;color:#eef6ff;font-weight:800;cursor:pointer;transition:.18s}
+.btn:hover{transform:translateY(-1px);border-color:#83a1c4;background:#253a52}
+.btn.primary{background:linear-gradient(135deg,#ff5268,#c92f50);border:0;box-shadow:0 6px 20px #ff526833}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:linear-gradient(145deg,#172438,#101927);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px #0003;min-width:0}
+.stat label{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.stat strong{display:block;font-size:22px;line-height:1.35;margin-top:3px;font-variant-numeric:tabular-nums}
+.meter{height:9px;background:#070d16;border:1px solid #26364a;border-radius:20px;margin-top:8px;overflow:hidden}
+.fill{height:100%;width:100%;border-radius:20px;background:linear-gradient(90deg,#e63858,#ff927b);box-shadow:0 0 12px #ff526855;transition:width .12s}
+#gbar{background:linear-gradient(90deg,#1a9fc8,#71edff);box-shadow:0 0 12px #53d9ef66}
+#ebar{background:linear-gradient(90deg,#c37b28,#ffdb7a);box-shadow:0 0 12px #ffd16655}
+#speedbar{background:linear-gradient(90deg,#7754d9,#c5a5ff)}
+.stat small{display:block;margin-top:5px;color:#8498b1;font-size:10px}
+.game{position:relative;padding:10px;background:linear-gradient(145deg,#18263a,#0b121e);border:1px solid #3a4a60;border-radius:17px;box-shadow:0 18px 55px #0008}
+.gamehead{display:flex;justify-content:space-between;align-items:center;padding:2px 5px 10px;color:#9fb0c5;font-size:10px;font-weight:900;letter-spacing:.2em}
+.gamehead span:last-child{color:#5c718b}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;border-radius:10px;background:#101d2c;box-shadow:inset 0 0 35px #0008}
+.overlay{position:absolute;inset:44px 10px 10px;background:linear-gradient(135deg,#080e19ed,#0a1524f2);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;border-radius:10px;z-index:2;backdrop-filter:blur(7px)}
+.overlay.hide{display:none}.overlay>div{max-width:500px}
+.overline{color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:.3em}
+.overlay h2{font-size:clamp(28px,5vw,42px);letter-spacing:.1em;margin:8px 0}
+.overlay p{font-size:13px;line-height:1.75;color:#b9c8d9;margin:0 auto 17px}
+.pause{position:absolute;inset:44px 10px 10px;background:#050a12c9;display:none;align-items:center;justify-content:center;text-align:center;z-index:3;border-radius:10px;font-size:34px;font-weight:950;letter-spacing:.18em;backdrop-filter:blur(5px)}
+.pause.show{display:flex}.pause small{display:block;font-size:11px;letter-spacing:.08em;color:#9fb0c5;margin-top:8px}
+.keys{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:13px 0}
+.key{display:flex;align-items:center;gap:8px;background:#111c2b;border:1px solid #29394e;border-radius:9px;padding:8px 11px;color:#aebed0;font-size:11px}
+.key b{display:inline-grid;place-items:center;min-width:25px;height:24px;padding:0 5px;border-radius:6px;background:#26384d;border:1px solid #435a75;color:#f5f8fc;font-size:11px}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.panel{background:#101a28;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.panel h3{font-size:11px;letter-spacing:.16em;margin:0 0 8px;color:#e8f1fb}
+.panel p{font-size:11px;line-height:1.7;color:#9fb0c5;margin:3px 0}
+.panel p b{color:#dceafa}
+.log{display:none}
+@media(max-width:720px){body{padding:12px 8px}.hud{grid-template-columns:repeat(2,1fr);gap:7px}.stat{padding:9px 10px}.stat strong{font-size:19px}.panels{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions .btn{flex:1}.game{padding:6px}.overlay{inset:38px 6px 6px}.overlay p{font-size:11px}}
+</style></head>
+<body><main>
+<header>
+  <div><h1><b>RING</b> SURVIVOR</h1><div class="subtitle">FIRST-PERSON BOXING · SURVIVE THE RING</div></div>
+  <div class="actions"><button class="btn" id="pause">일시정지 · P</button><button class="btn" id="restart">다시 시작</button></div>
+</header>
+<section class="hud">
+  <div class="stat"><label>PLAYER VITALITY</label><strong id="hp">100 / 100</strong><div class="meter"><div class="fill" id="hpbar"></div></div></div>
+  <div class="stat"><label>POWER ENERGY</label><strong id="g">0 / 100</strong><div class="meter"><div class="fill" id="gbar" style="width:0%"></div></div></div>
+  <div class="stat"><label>KNOCKOUTS · SCORE</label><strong id="score">0</strong><div class="meter"><div class="fill" id="ebar"></div></div><small id="ehp">상대 HP 400</small></div>
+  <div class="stat"><label>OPPONENT TEMPO</label><strong id="speed">100%</strong><div class="meter"><div class="fill" id="speedbar" style="width:10%"></div></div><small>격파할 때마다 +15%p</small></div>
+</section>
+<section class="game">
+  <div class="gamehead"><span id="round">ROUND 1</span><span>THE FIGHTING FLOOR</span></div>
+  <canvas id="screen" width="960" height="540"></canvas>
+  <div class="overlay" id="overlay"><div>
+    <div class="overline">ARCADE BOXING SURVIVAL</div><h2>RING SURVIVOR</h2>
+    <p>가드와 방어 성공으로 파워 게이지를 모아라. 스페이스바로 파워 펀치를 사용하면 게이지를 전부 소비하며, 게이지가 많을수록 큰 피해를 준다.</p>
+    <button class="btn primary" id="start">경기 시작</button>
+  </div></div>
+  <div class="pause" id="pauseLayer"><div>PAUSED<small>P 또는 버튼을 눌러 계속</small></div></div>
+</section>
+<div class="keys">
+  <span class="key"><b>좌클릭</b> 왼손 가드</span><span class="key"><b>우클릭</b> 오른손 가드</span>
+  <span class="key"><b>Z</b> 회피</span><span class="key"><b>X</b> 왼손 공격</span>
+  <span class="key"><b>C</b> 오른손 공격</span><span class="key"><b>SPACE</b> 파워 펀치</span>
+</div>
+<section class="panels">
+  <div class="panel"><h3>DEFENSE SYSTEM</h3>
+    <p>• 단발 공격은 해당 방향의 손으로 가드하거나 회피한다.</p>
+    <p>• 적의 좌우 연격은 양손 가드로 막는다.</p>
+    <p>• 가드를 유지하면 게이지가 초당 10 소모된다. 방어 성공 시 +20 회복하며, 게이지가 0이어도 가드할 수 있다.</p>
+  </div>
+  <div class="panel"><h3>COUNTER & PROGRESSION</h3>
+    <p>• 회피 성공 시 상대가 3초간 그로기에 빠진다.</p>
+    <p>• 기본 공격 피해 1.9. 파워 펀치는 게이지를 전부 소비하며 게이지 1당 피해 1.5를 준다. 상대 HP는 400.</p>
+    <p>• 적을 격파할 때마다 적의 행동 속도가 15%p 상승한다.</p>
+  </div>
+</section>
+<div class="log"><span id="log"></span><span id="combo"></span></div>
+</main>
+
+<script>
+(()=>{
+const c=document.getElementById('screen'),x=c.getContext('2d'),$=id=>document.getElementById(id);
+const GAP=320, COMBO_HITS=3;
+let run=false,paused=false,hp=100,g=0,score=0,ehp=400,emax=400,stun=0,attack=null,next=0,dodge=0,dodgeCD=0,L=false,R=false,punch=null,down=false,spawnAt=0,raf=0,last=0,enemyHitAt=-1000,enemyHitPower=0;
+const now=()=>performance.now(),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a),speed=()=>1+.15*score;
+function update(){
+ $('hp').textContent=Math.ceil(hp)+' / 100';$('hpbar').style.width=hp+'%';
+ $('g').textContent=Math.floor(g)+' / 100';$('gbar').style.width=g+'%';
+ $('score').textContent=score;$('ebar').style.width=(ehp/emax*100)+'%';
+ $('ehp').textContent='상대 HP '+Math.ceil(ehp)+' / '+emax;
+ $('round').textContent='ROUND '+(score+1);$('speed').textContent=Math.round(speed()*100)+'%';
+ $('speedbar').style.width=Math.min(100,speed()*10)+'%';
+}
+function schedule(){next=now()+rand(2000,6000)/speed()}
+function spawn(){emax=400;ehp=emax;down=false;attack=null;stun=0;schedule();update()}
+function start(){
+ cancelAnimationFrame(raf);hp=100;g=0;score=0;stun=0;attack=null;dodge=0;dodgeCD=0;L=R=false;punch=null;down=false;paused=false;enemyHitAt=-1000;enemyHitPower=0;
+ $('pauseLayer').classList.remove('show');$('pause').textContent='일시정지 · P';spawn();run=true;$('overlay').classList.add('hide');last=now();loop()
+}
+function over(){
+ run=false;attack=null;$('overlay').classList.remove('hide');
+ $('overlay').querySelector('.overline').textContent='MATCH COMPLETE';
+ $('overlay').querySelector('h2').textContent='GAME OVER';
+ $('overlay').querySelector('p').innerHTML='격파 수 <b>'+score+'</b> · 최종 적 행동 속도 <b>'+Math.round(speed()*100)+'%</b><br>다시 도전해 기록을 갱신해 보자.';
+ $('overlay').querySelector('button').textContent='다시 도전';
+}
+function hurt(n){hp=clamp(hp-n,0,100);if(hp<=0)over();update()}
+function beginAttack(){
+ if(!run||paused||attack||down||stun>now())return;
+ const flurry=Math.random()<.36,side=Math.random()<.5?'left':'right',s=speed();
+ attack={type:flurry?'flurry':'single',side,start:now(),wind:(flurry?850:1100)/s,gap:GAP/s,
+   hitCount:flurry?COMBO_HITS:1,dur:(flurry?850+GAP*(COMBO_HITS-1)+240:1100+360)/s,done:[]};
+}
+function resolve(t){
+ if(!attack)return;
+ const elapsed=t-attack.start-attack.wind;if(elapsed<0)return;
+ const idx=attack.type==='flurry'?Math.floor(elapsed/attack.gap):0;
+ if(idx>=0&&idx<attack.hitCount&&!attack.done.includes(idx)){
+   attack.done.push(idx);
+   if(dodge>t){stun=t+3000;attack=null;return}
+   const side=attack.type==='flurry'?(idx%2===0?attack.side:(attack.side==='left'?'right':'left')):attack.side;
+   const guarded=attack.type==='flurry'?(L&&R):(side==='left'?L:R);
+   // 가드는 연격 게이지가 0이어도 작동한다.
+   if(guarded){g=clamp(g+20,0,100)}
+   else hurt(attack.type==='flurry'?8:14);
+ }
+ if(attack&&t-attack.start>=attack.dur){attack=null;schedule()}
+}
+function evade(){const t=now();if(!run||paused||down||t<dodgeCD)return;dodge=t+520;dodgeCD=t+1050}
+function hit(kind){
+ if(!run||paused||down||stun<=now())return;
+ if(kind==='combo'&&g<=0)return;
+ if(kind==='combo'){const stored=g,damage=stored*1.5;g=0;ehp-=damage;punch={side:'power',start:now(),duration:560,power:stored};enemyHitAt=now();enemyHitPower=stored/100}
+ else{ehp-=1.9;punch={side:kind,start:now(),duration:330};enemyHitAt=now();enemyHitPower=.12}
+ if(ehp<=0){ehp=0;down=true;score++;attack=null;stun=0;spawnAt=now()+1400}
+ update()
+}
+function rr(a,b,w,h,r){x.beginPath();x.roundRect(a,b,w,h,r);x.fill()}
+function draw(t){
+ x.clearRect(0,0,960,540);
+ const bg=x.createLinearGradient(0,0,0,540);bg.addColorStop(0,'#253a54');bg.addColorStop(.48,'#17283b');bg.addColorStop(.49,'#101a29');bg.addColorStop(1,'#080e18');x.fillStyle=bg;x.fillRect(0,0,960,540);
+ // Arena lights and crowd silhouettes
+ for(let i=0;i<72;i++){const xx=(i*79+23)%960,yy=58+(i*43)%155;x.fillStyle=i%4===0?'#ffd16644':'#c9e4ff22';x.fillRect(xx,yy,3,3)}
+ const glow=x.createRadialGradient(480,235,30,480,235,430);glow.addColorStop(0,'#70c7ff0b');glow.addColorStop(1,'#0000');x.fillStyle=glow;x.fillRect(0,0,960,540);
+ // Ring ropes
+ x.lineWidth=4;[155,218,282].forEach((y,i)=>{x.strokeStyle=['#ff526866','#d5e5f066','#53d9ef66'][i];x.beginPath();x.moveTo(0,y);x.lineTo(960,y);x.stroke()});
+ // Canvas floor perspective
+ x.fillStyle='#111d2b';x.beginPath();x.moveTo(0,294);x.lineTo(960,294);x.lineTo(960,540);x.lineTo(0,540);x.fill();
+ x.strokeStyle='#60748a35';x.lineWidth=2;for(let i=0;i<=12;i++){x.beginPath();x.moveTo(i*80,294);x.lineTo(480+(i-6)*155,540);x.stroke()}
+ x.strokeStyle='#dce9f022';x.strokeRect(115,315,730,205);
+ let groggy=stun>t,lean=0,bob=Math.sin(t/190)*3;
+ if(attack){const e=t-attack.start;if(e<attack.wind)lean=-Math.sin(e/attack.wind*Math.PI)*13;else if(attack.type==='flurry'){const k=Math.floor((e-attack.wind)/attack.gap);lean=k<attack.hitCount?(k%2===0?19:-19):0}else lean=17*Math.sin((e-attack.wind)/attack.dur*Math.PI)}
+ if(groggy)lean=18*Math.sin(t/75);
+ const hitAge=t-enemyHitAt,hitShake=hitAge>=0&&hitAge<280?Math.sin(hitAge/17*Math.PI*2)*(5+enemyHitPower*15)*(1-hitAge/280):0;
+ const hitBob=hitAge>=0&&hitAge<220?Math.sin(hitAge/28*Math.PI)*(2+enemyHitPower*8)*(1-hitAge/220):0;
+ const cx=480+lean+hitShake; bob+=hitBob;
+ // Enemy hit flash and impact pulse
+ if(hitAge>=0&&hitAge<220){const pulse=1-hitAge/220;x.save();x.globalAlpha=pulse*(.18+enemyHitPower*.22);x.strokeStyle='#ffd166';x.lineWidth=5+enemyHitPower*5;x.beginPath();x.ellipse(480,270,105+(1-pulse)*75,135+(1-pulse)*65,0,0,Math.PI*2);x.stroke();x.restore()}
+ // Enemy shadow and body
+ x.fillStyle='#0008';x.beginPath();x.ellipse(480,437,190,34,0,0,Math.PI*2);x.fill();
+ x.fillStyle='#26374a';rr(cx-76,340,62,110,18);rr(cx+14,340,62,110,18);
+ x.fillStyle=groggy?'#78545b':'#8d3540';rr(cx-105,220+bob,210,155,42);
+ x.fillStyle='#bd8d70';rr(cx-27,185+bob,54,48,15);x.beginPath();x.ellipse(cx,150+bob,61,67,0,0,Math.PI*2);x.fill();
+ x.fillStyle='#302b2c';x.beginPath();x.arc(cx,132+bob,61,Math.PI,Math.PI*2);x.fill();x.fillRect(cx-61,132+bob,122,18);
+ x.fillStyle='#2b2425';x.beginPath();x.arc(cx-22,155+bob,5,0,7);x.arc(cx+22,155+bob,5,0,7);x.fill();
+ // Enemy arm windup and strike poses
+ let la=0,ra=0;
+ if(attack){const e=t-attack.start;if(e<attack.wind){const q=e/attack.wind;if(attack.type==='single'){if(attack.side==='left')la=-.9*q;else ra=.9*q}else{la=-.65*q;ra=.65*q}}
+ else if(attack.type==='single'){if(attack.side==='left')la=-1.7;else ra=1.7}
+ else{const k=Math.floor((e-attack.wind)/attack.gap),phase=(e-attack.wind)%attack.gap;if(k<attack.hitCount){const active=phase<145,side=k%2===0?attack.side:(attack.side==='left'?'right':'left');if(side==='left')la=active?-1.7:-.1;else ra=active?1.7:.1}}}
+ function arm(ax,ay,ang,side){x.save();x.translate(ax,ay);x.rotate(ang);x.fillStyle='#bd8d70';rr(-22,0,44,118,22);x.translate(0,105);x.fillStyle=side==='left'?'#d94c57':'#b93645';x.beginPath();x.ellipse(0,0,40,34,0,0,7);x.fill();x.strokeStyle='#651f2a';x.lineWidth=5;x.stroke();x.restore()}
+ arm(cx-91,250+bob,la,'left');arm(cx+91,250+bob,ra,'right');
+ if(groggy){x.save();x.globalAlpha=.65+.3*Math.sin(t/80);x.strokeStyle='#ffd166';x.lineWidth=5;x.beginPath();x.ellipse(cx,220,128,150,0,0,Math.PI*2);x.stroke();x.restore()}
+ // Player dodge trail
+ const dodging=dodge>t,shift=dodging?85*Math.sin(Math.PI*clamp((dodge-t)/520,0,1)):0;
+ if(dodging){x.save();x.globalAlpha=.18;x.fillStyle='#53d9ef';x.beginPath();x.ellipse(480,472,155,22,0,0,Math.PI*2);x.fill();x.restore()}
+ function glove(px,py,side,guarded){
+   x.save();let dx=side==='left'?-shift:shift,dy=0,ang=0,scale=1;
+   if(guarded){dy=-57;ang=side==='left'?.28:-.28}
+   if(punch){const elapsed=t-punch.start;if(elapsed>=0&&elapsed<(punch.duration||360)){
+     if(punch.side==='power'){const q=clamp(elapsed/punch.duration,0,1),drive=Math.sin(Math.PI*q),force=.55+punch.power/100*.45;dx+=(side==='left'?1:-1)*(28+142*drive*force);dy-=18+58*drive*force;ang=side==='left'?.5:-.5;scale=1+.18*drive*force}
+     else if(punch.side===side){const q=clamp(elapsed/330,0,1);dx+=(side==='left'?1:-1)*105*Math.sin(Math.PI*q);dy-=65*Math.sin(Math.PI*q);ang=side==='left'?.4:-.4;scale=1+.15*Math.sin(Math.PI*q)}
+   }}
+   x.translate(px+dx,py+dy);x.rotate(ang);x.scale(scale,scale);
+   x.fillStyle='#c58d72';x.beginPath();x.moveTo(-38,80);x.quadraticCurveTo(-55,30,-35,-5);x.lineTo(35,-5);x.quadraticCurveTo(55,30,38,80);x.closePath();x.fill();
+   x.fillStyle=guarded?'#348dcc':'#246fae';x.strokeStyle='#153e62';x.lineWidth=7;x.beginPath();x.ellipse(0,0,58,48,-.12,0,7);x.fill();x.stroke();x.fillStyle='#77caff';x.fillRect(-24,-12,48,8);x.restore()
+ }
+ glove(250,470,'left',L);glove(710,470,'right',R);
+ if(punch&&t-punch.start>(punch.duration||360))punch=null;
+}
+function loop(){
+ if(!run||paused)return;
+ const t=now(),dt=Math.min(50,t-last||16);last=t;
+ // Holding either guard drains energy at 10 per second; blocking remains available at zero energy.
+ if(L||R)g=Math.max(0,g-10*dt/1000);
+ if(attack)resolve(t);else if(!down&&stun<=t&&t>=next)beginAttack();
+ if(down&&t>=spawnAt)spawn();
+ draw(t);update();raf=requestAnimationFrame(loop)
+}
+function togglePause(){if(!run)return;paused=!paused;$('pauseLayer').classList.toggle('show',paused);$('pause').textContent=paused?'계속하기 · P':'일시정지 · P';if(!paused){last=now();loop()}else cancelAnimationFrame(raf)}
+document.addEventListener('keydown',e=>{if(e.code==='Space')e.preventDefault();if(e.repeat)return;if(e.code==='KeyP'){togglePause();return}if(e.code==='KeyZ')evade();if(e.code==='KeyX')hit('left');if(e.code==='KeyC')hit('right');if(e.code==='Space')hit('combo')});
+c.addEventListener('mousedown',e=>{if(e.button===0)L=true;if(e.button===2)R=true;e.preventDefault()});
+document.addEventListener('mouseup',e=>{if(e.button===0)L=false;if(e.button===2)R=false});
+c.addEventListener('mouseleave',()=>{L=false;R=false});c.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('contextmenu',e=>e.preventDefault());
+$('start').onclick=start;$('pause').onclick=togglePause;
+$('restart').onclick=()=>{if(run)start();else{$('overlay').classList.remove('hide');$('overlay').querySelector('.overline').textContent='ARCADE BOXING SURVIVAL';$('overlay').querySelector('h2').textContent='RING SURVIVOR';$('overlay').querySelector('p').innerHTML='가드와 방어 성공으로 파워 게이지를 모아라. 스페이스바로 파워 펀치를 사용하면 게이지를 전부 소비하며, 게이지가 많을수록 큰 피해를 준다.';$('overlay').querySelector('button').textContent='경기 시작'}};
+draw(now());update();
+})();
+</script>
+</body></html>
